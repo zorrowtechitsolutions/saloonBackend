@@ -6,9 +6,9 @@ A microservice-based backend that powers salon operations: appointments, service
 
 | | |
 |---|---|
-| **Project owner** | [Name / Team] |
+| **Project owner** | Zorrow Tech |
 | **Status** | In development (Phase 3 – Documentation) |
-| **Repository** | [Repo URL] |
+| **Repository** | https://github.com/zorrowtechitsolutions/saloonBackend |
 | **Last updated** | 2026-11-24 |
 
 ---
@@ -17,7 +17,7 @@ A microservice-based backend that powers salon operations: appointments, service
 
 The Salon Management System replaces manual booking and billing with a single platform used by three groups:
 
-- **Admins** manage branches, services, staff, offers and reports.
+- **Admins** manage services, staff, offers and reports.
 - **Staff** (stylists, receptionists) manage schedules and appointments.
 - **Customers** book appointments, pay, use offers and leave reviews.
 
@@ -25,9 +25,9 @@ This repository contains the backend only. It exposes REST APIs through a single
 
 ## 2. Key Features
 
-- Role-based access control (Admin, Stylist, Receptionist, Client)
+- Role-based access control (Super admin, Admin, staff, user)
 - Appointment booking and stylist scheduling
-- Service and branch management
+- Service  management
 - Invoicing and payments (Cash, Card, UPI)
 - Offers, coupons and redemption tracking
 - Inventory, suppliers and purchase orders
@@ -43,9 +43,8 @@ The system uses **6 consolidated microservices**, each owning its own database. 
 | `identity-user-service` | Users, roles, permissions, staff and customer profiles |
 | `salon-operations-service` | Branches, services, appointments, schedules |
 | `billing-promotions-service` | Invoices, payments, offers, coupons |
-| `inventory-service` | Products, stock levels, suppliers, purchase orders |
+| `inventory-analytics-service` | Products, stock levels, suppliers, purchase orders then  Reports and metrics built from events |
 | `engagement-service` | Notifications, templates, reviews, moderation |
-| `analytics-service` | Reports and metrics built from events |
 
 Details: [architecture.md](./architecture.md)
 
@@ -55,13 +54,13 @@ Details: [architecture.md](./architecture.md)
 
 | Layer | Technology |
 |---|---|
-| Language / Framework | [e.g. Node.js + NestJS / Java + Spring Boot] |
-| Database | [e.g. PostgreSQL – one database per service] |
-| Messaging | [e.g. RabbitMQ / Kafka] |
-| API Gateway | [e.g. Nginx / Kong / custom] |
+| Language / Framework | Node.js  |
+| Database |  PostgreSQL  |
+| Messaging |  RabbitMQ  |
+| API Gateway |  Nginx  |
 | Authentication | JWT |
 | Containerization | Docker, Docker Compose |
-| Testing | [e.g. Jest / JUnit] |
+| Testing | postman |
 
 ## 5. Project Structure
 
@@ -105,13 +104,13 @@ cp .env.example .env
 # 3. Start all services
 docker-compose up --build
 
-# 4. Run database migrations and seed data
+# 4. Run database migrations 
 [migration command]
 ```
 
 ### Verify
 
-Open `http://localhost:[PORT]/health`. All services should return `OK`.
+Open `http://localhost:3000/health`. All services should return `OK`.
 
 ## 7. Environment Variables
 
@@ -135,7 +134,7 @@ All new code must include tests and pass before merging.
 
 ## 9. API Access
 
-- Base URL (local): `http://localhost:[PORT]/api/v1`
+- Base URL (local): `http://localhost:3000/api/v1`
 - All requests go through the API gateway.
 - Protected endpoints need the header `Authorization: Bearer <token>`.
 
@@ -167,10 +166,10 @@ Read these before writing code.
 
 | Role | Name | Contact |
 |---|---|---|
-| Project Manager | [Name] | [Email] |
-| Tech Lead | [Name] | [Email] |
-| Backend Team | [Names] | [Channel] |
+| Project Manager | safwan | zorrowtech@gmail.com |
+| Tech Lead | safwan |  zorrowtech@gmail.com |
+| Backend Team | suhaila thasni | #salon-backend (Slack) |
 
 ---
 
-© [Year] [Company Name]. All rights reserved.
+© 2026 zorrowtech. All rights reserved.
