@@ -1,6 +1,6 @@
 # Zorrow Salon – Backend
 
-> Internal project of **[Company Name]**. Confidential. Do not share outside the organization.
+> Internal project of **Zorrow Tech**. Confidential. Do not share outside the organization.
 
 A microservice-based backend that powers salon operations: appointments, services, staff and customers, billing, offers, inventory, notifications, reviews and reports.
 
