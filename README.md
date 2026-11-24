@@ -94,10 +94,15 @@ Each module follows: `controller → service → repository`, plus `routes`, `mo
 ## 6. Getting Started
 
 ### Prerequisites
+## 6. Getting Started
 
-- [Runtime, e.g. Node.js 20+] 
+### Prerequisites
+
+- Node.js 20 or higher
+- npm (installed together with Node.js)
 - Docker and Docker Compose
 - Git
+- Postman (optional, for testing APIs)
 
 ### Setup
 
