@@ -50,8 +50,6 @@ Details: [architecture.md](./architecture.md)
 
 ## 4. Tech Stack
 
-> Update this table to match the final decisions.
-
 | Layer | Technology |
 |---|---|
 | Language / Runtime | Node.js ,Typescript  |
