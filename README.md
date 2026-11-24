@@ -1,73 +1,70 @@
 # Salon Management System – Backend
 
-A microservice-based backend for managing salon operations: appointments, services, staff, customers, billing, offers, inventory, notifications, reviews and reports.
+> Internal project of **[Company Name]**. Confidential. Do not share outside the organization.
 
-![Status](https://img.shields.io/badge/status-in%20development-yellow)
-![License](https://img.shields.io/badge/license-MIT-blue)
+A microservice-based backend that powers salon operations: appointments, services, staff and customers, billing, offers, inventory, notifications, reviews and reports.
 
----
-
-## Table of Contents
-1. [Overview](#overview)
-2. [Key Features](#key-features)
-3. [Architecture](#architecture)
-4. [Tech Stack](#tech-stack)
-5. [Project Structure](#project-structure)
-6. [Getting Started](#getting-started)
-7. [Environment Variables](#environment-variables)
-8. [Running Tests](#running-tests)
-9. [API Access](#api-access)
-10. [Documentation](#documentation)
-11. [Contributing](#contributing)
-12. [License](#license)
+| | |
+|---|---|
+| **Project owner** | [Name / Team] |
+| **Status** | In development (Phase 3 – Documentation) |
+| **Repository** | [Repo URL] |
+| **Last updated** | 2026-11-24 |
 
 ---
 
-## Overview
-The Salon Management System provides a REST API for three types of users:
+## 1. Overview
 
-- **Admin:** manages branches, staff, services, offers and reports
-- **Staff:** manages their schedule and appointments
-- **Customer:** books appointments, pays invoices, redeems offers and leaves reviews
+The Salon Management System replaces manual booking and billing with a single platform used by three groups:
 
-## Key Features
-- Role-based authentication and authorization
-- Appointment booking with stylist availability checks
+- **Admins** manage branches, services, staff, offers and reports.
+- **Staff** (stylists, receptionists) manage schedules and appointments.
+- **Customers** book appointments, pay, use offers and leave reviews.
+
+This repository contains the backend only. It exposes REST APIs through a single API gateway.
+
+## 2. Key Features
+
+- Role-based access control (Admin, Stylist, Receptionist, Client)
+- Appointment booking and stylist scheduling
 - Service and branch management
-- Invoicing and multiple payment methods (cash, card, UPI)
-- Offers and coupon codes with redemption tracking
-- Inventory and supplier management
-- SMS/email notifications
-- Customer reviews with admin moderation
-- Revenue and performance reports
+- Invoicing and payments (Cash, Card, UPI)
+- Offers, coupons and redemption tracking
+- Inventory, suppliers and purchase orders
+- SMS/Email notifications and reviews
+- Business reports and performance metrics
 
-## Architecture
-The system is split into 6 services behind an API gateway.
+## 3. Architecture Summary
+
+The system uses **6 consolidated microservices**, each owning its own database. Services communicate through the API gateway (synchronous) and events (asynchronous).
 
 | Service | Responsibility |
 |---|---|
-| `identity-user-service` | Admins, staff, customers, roles and permissions |
-| `salon-operations-service` | Appointments, services, branches, schedules |
+| `identity-user-service` | Users, roles, permissions, staff and customer profiles |
+| `salon-operations-service` | Branches, services, appointments, schedules |
 | `billing-promotions-service` | Invoices, payments, offers, coupons |
-| `inventory-service` | Products, stock, suppliers, purchase orders |
-| `engagement-service` | Notifications, reviews and ratings |
-| `analytics-service` | Reports and business metrics |
+| `inventory-service` | Products, stock levels, suppliers, purchase orders |
+| `engagement-service` | Notifications, templates, reviews, moderation |
+| `analytics-service` | Reports and metrics built from events |
 
-Services communicate through REST calls and asynchronous events (for example `appointment.completed`, `payment.received`).
-See [architecture.md](docs/architecture.md) for details.
+Details: [architecture.md](./architecture.md)
 
-## Tech Stack
+## 4. Tech Stack
+
+> Update this table to match the final decisions.
+
 | Layer | Technology |
 |---|---|
-| Language / Runtime | Node.js 20 (TypeScript) |
-| Framework | NestJS |
-| Database | PostgreSQL (one database per service) |
-| Messaging | RabbitMQ |
-| API Gateway | Nginx / Kong |
-| Containers | Docker, Docker Compose |
-| Testing | Jest, Supertest |
+| Language / Framework | [e.g. Node.js + NestJS / Java + Spring Boot] |
+| Database | [e.g. PostgreSQL – one database per service] |
+| Messaging | [e.g. RabbitMQ / Kafka] |
+| API Gateway | [e.g. Nginx / Kong / custom] |
+| Authentication | JWT |
+| Containerization | Docker, Docker Compose |
+| Testing | [e.g. Jest / JUnit] |
 
-## Project Structure
+## 5. Project Structure
+
 ```text
 salon-backend/
 ├── api-gateway/
@@ -78,83 +75,102 @@ salon-backend/
 │   ├── inventory-service/
 │   ├── engagement-service/
 │   └── analytics-service/
-├── shared/
-├── docs/
+├── shared/                # Event schemas, common utils and types
 ├── docker-compose.yml
-└── .env.example
+├── .env.example
+└── README.md
 ```
 
-## Getting Started
+Each service follows the same layout: `src/` (modules), `migrations/`, `tests/`, `Dockerfile`.
+Each module follows: `controller → service → repository`, plus `routes`, `model` and `dto/`.
+
+## 6. Getting Started
 
 ### Prerequisites
-- Node.js 20 or later
+
+- [Runtime, e.g. Node.js 20+] 
 - Docker and Docker Compose
 - Git
 
-### Installation
+### Setup
+
 ```bash
 # 1. Clone the repository
-git clone https://github.com/<your-org>/salon-backend.git
+git clone [Repo URL]
 cd salon-backend
 
 # 2. Create your environment file
 cp .env.example .env
 
-# 3. Start all services and databases
+# 3. Start all services
 docker-compose up --build
 
-# 4. Run migrations and seed sample data
-npm run migrate:all
-npm run seed:all
+# 4. Run database migrations and seed data
+[migration command]
 ```
 
-### Verify the setup
+### Verify
+
+Open `http://localhost:[PORT]/health`. All services should return `OK`.
+
+## 7. Environment Variables
+
+| Variable | Description |
+|---|---|
+| `DB_URL_*` | Database connection string for each service |
+| `JWT_SECRET` | Secret used to sign tokens |
+| `MESSAGE_BROKER_URL` | Event broker connection |
+| `SMS_API_KEY` / `EMAIL_API_KEY` | Notification providers |
+
+Never commit real secrets. Use `.env.example` for placeholders only.
+
+## 8. Running Tests
+
 ```bash
-curl http://localhost:8080/health
-# Expected: {"status":"ok"}
+[unit test command]
+[integration test command]
 ```
 
-## Environment Variables
-| Variable | Description | Example |
-|---|---|---|
-| `JWT_SECRET` | Secret used to sign tokens | `change-me` |
-| `JWT_EXPIRES_IN` | Token lifetime | `1d` |
-| `DB_HOST` | Database host | `localhost` |
-| `DB_PORT` | Database port | `5432` |
-| `RABBITMQ_URL` | Message broker URL | `amqp://guest:guest@rabbitmq:5672` |
-| `SMS_API_KEY` | SMS provider key | – |
-| `SMTP_HOST` | Email server host | – |
+All new code must include tests and pass before merging.
 
-> Never commit real secrets. Use `.env.example` for placeholders only.
+## 9. API Access
 
-## Running Tests
-```bash
-npm run test           # Unit tests
-npm run test:e2e       # Integration tests
-npm run test:cov       # Coverage report
-```
+- Base URL (local): `http://localhost:[PORT]/api/v1`
+- All requests go through the API gateway.
+- Protected endpoints need the header `Authorization: Bearer <token>`.
 
-## API Access
-- **Base URL:** `http://localhost:8080/api/v1`
-- **Interactive docs (Swagger):** `http://localhost:8080/api/docs`
-- Full endpoint list: [api-documentation.md](docs/api-documentation.md)
+Full endpoint list: [api-documentation.md](./api-documentation.md)
 
-## Documentation
+## 10. Project Documentation
+
 | File | Purpose |
 |---|---|
-| [requirements.md](docs/requirements.md) | Functional and non-functional requirements |
-| [architecture.md](docs/architecture.md) | Backend architecture |
-| [modules.md](docs/modules.md) | Module descriptions |
-| [database-design.md](docs/database-design.md) | Tables and relationships |
-| [api-documentation.md](docs/api-documentation.md) | API endpoints |
-| [business-rules.md](docs/business-rules.md) | Salon-specific rules |
-| [development-plan.md](docs/development-plan.md) | Development phases and tasks |
+| [requirements.md](./requirements.md) | Functional and non-functional requirements |
+| [architecture.md](./architecture.md) | Backend architecture |
+| [modules.md](./modules.md) | Module descriptions |
+| [database-design.md](./database-design.md) | Tables and relationships |
+| [api-documentation.md](./api-documentation.md) | API endpoints |
+| [business-rules.md](./business-rules.md) | Salon-specific rules |
+| [development-plan.md](./development-plan.md) | Development phases and tasks |
 
-## Contributing
-1. Create a branch from `develop`: `feature/<module>-<short-description>`
-2. Follow the commit style: `feat(appointments): add double-booking check`
-3. Add or update tests for your change
-4. Open a pull request and request a review
+Read these before writing code.
 
-## License
-Released under the [MIT License](LICENSE).
+## 11. Development Guidelines
+
+- **Branches:** `main` (stable), `develop` (integration), `feature/<module>-<short-name>`, `bugfix/<short-name>`
+- **Commits:** `type(scope): message`, for example `feat(offers): add coupon validation`
+- **Pull requests:** at least one reviewer, tests passing, no direct pushes to `main`
+- **Boundaries:** a service must not read another service's database. Use APIs or events.
+- **Naming:** services in `kebab-case`, tables in `snake_case`, API paths in plural nouns (`/appointments`)
+
+## 12. Team and Contact
+
+| Role | Name | Contact |
+|---|---|---|
+| Project Manager | [Name] | [Email] |
+| Tech Lead | [Name] | [Email] |
+| Backend Team | [Names] | [Channel] |
+
+---
+
+© [Year] [Company Name]. All rights reserved.
