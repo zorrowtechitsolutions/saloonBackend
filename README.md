@@ -72,16 +72,29 @@ Details: [architecture.md](./architecture.md)
 
 ```text
 salon-backend/
-├── api-gateway/
 ├── services/
+│   ├── api-gateway/
 │   ├── identity-user-service/
 │   ├── salon-operations-service/
 │   ├── billing-promotions-service/
 │   ├── inventory-service/
 │   ├── engagement-service/
 │   └── analytics-service/
-├── shared/                # Event schemas, common utils and types
-├── docker-compose.yml
+├── docs/
+│   ├── requirements.md
+│   ├── architecture.md
+│   ├── modules.md
+│   ├── database-design.md
+│   ├── api-documentation.md
+│   ├── business-rules.md
+│   └── development-plan.md
+├── scripts/
+│   └── backup/                # Database backup scripts
+├── .github/
+│   └── workflows/             # CI/CD pipelines
+├── docker-compose.yml         # Local development
+├── docker-compose.demo.yml    # Demo environment
+├── docker-compose.prod.yml    # Production
 ├── .env.example
 └── README.md
 ```
