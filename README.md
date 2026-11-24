@@ -147,12 +147,9 @@ Never commit real secrets. Use `.env.example` for placeholders only.
 
 ## 8. Running Tests
 
-```bash
-[unit test command]
-[integration test command]
-```
+APIs are tested with Postman. Import the collection from `docs/postman/` and run it against your local environment.
 
-All new code must include tests and pass before merging.
+All new APIs must be tested in Postman and pass before merging.
 
 ## 9. API Access
 
@@ -178,9 +175,15 @@ Read these before writing code.
 
 ## 11. Development Guidelines
 
-- **Branches:** `main` (stable), `develop` (integration), `feature/<module>-<short-name>`, `bugfix/<short-name>`
+- **Branches:**
+  - `main`: latest tested code, where all work is merged first
+  - `demo`: code from `main` deployed to the demo environment for review
+  - `production`: code from `demo` deployed to the live environment
+  - `feature/<module>-<short-name>`: new features, branched from `main`
+  - `bugfix/<short-name>`: bug fixes, branched from `main`
+- **Release flow:** `feature/*` → `main` → `demo` → `production`. Code only moves forward in this order, and never goes to `production` without passing through `demo`.
 - **Commits:** `type(scope): message`, for example `feat(offers): add coupon validation`
-- **Pull requests:** at least one reviewer, tests passing, no direct pushes to `main`
+- **Pull requests:** at least one reviewer and passing tests. No direct pushes to `main`, `demo` or `production`.
 - **Boundaries:** a service must not read another service's database. Use APIs or events.
 - **Naming:** services in `kebab-case`, tables in `snake_case`, API paths in plural nouns (`/appointments`)
 
@@ -188,9 +191,9 @@ Read these before writing code.
 
 | Role | Name | Contact |
 |---|---|---|
-| Project Manager | safwan | zorrowtech@gmail.com |
-| Tech Lead | safwan |  zorrowtech@gmail.com |
-| Backend Team | suhaila thasni | #salon-backend (Slack) |
+| Project Manager / Tech Lead | Safwan | zorrowtech@gmail.com |
+| Backend Developer | Suhaila Thasni | suhailathasni0@gmail.com |
+| Backend Team Channel | - | #salon (Pumble) |
 
 ---
 
