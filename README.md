@@ -99,8 +99,6 @@ salon-backend/
 └── README.md
 ```
 
-Each service follows the same layout: `src/` (modules), `migrations/`, `tests/`, `Dockerfile`.
-Each module follows: `controller → service → repository`, plus `routes`, `model` and `dto/`.
 
 ## 6. Getting Started
 
