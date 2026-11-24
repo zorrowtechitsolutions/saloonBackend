@@ -2,214 +2,127 @@
 
 > Internal project of **Zorrow Tech**. Confidential. Do not share outside the organization.
 
-A microservice-based backend for a **multi-salon platform**. Many salons join one shared system (similar to how shops sell on Amazon). Customers find salons, book appointments, pay, earn reward coins and leave reviews. Salon owners run their salon from an admin panel without installing, hosting or maintaining any software.
+A microservice-based SaaS backend for a **multi-salon platform**. Multiple salons join one shared cloud system. Customers discover salons, book appointments, pay at the counter, earn reward coins, and leave reviews. Salon owners manage their business without installing, hosting, or maintaining any software.
 
 | | |
 |---|---|
-| **Project owner** | Zorrow Tech |
-| **Status** | In development (Phase 3 – Documentation) |
+| **Project Owner** | Zorrow Tech |
+| **Status** | In Development (Phase 3 – Documentation & Design Architecture) |
 | **Repository** | https://github.com/zorrowtechitsolutions/saloonBackend |
-| **Last updated** | 2026-11-24 |
+| **Last Updated** | 2026-11-24 |
 
 ---
 
-## 1. Overview
+## 1. Overview & Business Model
 
-Zorrow Tech runs **one platform for all salons**. Each salon is a separate *tenant*: it sees only its own data, and customers can use one account across every salon on the platform.
+Zorrow Tech operates a centralized **SaaS platform for salons**. Each salon operates as an isolated tenant: it accesses strictly its own data, while customers enjoy a single account across all salons on the platform.
 
-Four groups use the system:
+### Platform Revenue Streams
+1. **Monthly Salon Subscriptions:** Salons pay a monthly subscription fee based on tier limits (staff limit, booking quota, feature access).
+2. **Platform Advertisements:** Salons purchase sponsored ad slots (Hero Carousel Banners, Featured Search Listings, Category Spotlights) managed centrally by Zorrow.
 
-| Group | Role | What they do |
+### User Roles & Governance
+
+| Role | Scope | What They Do |
 |---|---|---|
-| **Zorrow team** | Super Admin | Approve and suspend salons, set commission, manage coin rewards, moderate reviews, view platform reports and settlements |
-| **Salon owner** | Admin | Manage own salon profile, services, staff, offers, inventory and reports |
-| **Salon employees** | Staff | Stylists and receptionists. Manage their schedule and appointments |
-| **Customers** | User | Search salons, book, pay, earn and redeem coins, refer friends, leave reviews |
+| **Super Admin** | Platform-Wide | Controls **only**: Monthly Subscriptions, Advertisements, Master Services Catalog, Master Inventory Catalog, Coins & Referrals, and Global Role Permissions. Has **view-only** access to salons (cannot approve or suspend salons). |
+| **Admin** | Single Salon (`salon_id`) | Salon owner. Selects services from master catalog and sets local prices; manages local stock from master inventory; hires staff and schedules; manages bookings, local offers, and pays subscriptions. |
+| **Staff** | Single Salon (`salon_id`) | Stylists and receptionists. Manage daily appointments, working schedules, and walk-in counter payment collection. |
+| **User** | Global (All Salons) | Customer. Searches salons, books appointments, pays, earns and redeems coins across all salons, refers friends, and leaves reviews. |
 
-### Why salons join the platform
-
-- No app to build, host, update or back up. Zorrow Tech maintains the platform for every salon.
-- New customers come through the platform, and customers return because of reward coins.
-- Coin rewards and referral rewards are paid by Zorrow, not by the salon.
-- Salons pay only a commission on completed bookings (rate set by Zorrow, see `docs/business-rules.md`).
-
-This repository contains the backend only. It exposes REST APIs through a single API gateway.
+---
 
 ## 2. Key Features
 
-- Multi-salon platform: salon registration, approval by Super Admin, public salon listing
-- Role-based access control (Super Admin, Admin, Staff, User) with strict salon data isolation
-- Appointment booking and stylist scheduling
-- Service management per salon
-- Invoicing and payments (Cash, Card, UPI)
-- Offers, coupons and redemption tracking per salon
-- **Referral and coins:** referrer earns 10 coins (₹10), the new customer earns 5 coins (₹5) after the new customer's first paid booking. Every paid booking earns 2% back in coins. 1 coin = ₹1. All values are configurable.
-- Commission and monthly settlement between Zorrow and each salon
-- Inventory, suppliers and purchase orders per salon
-- SMS/Email notifications and reviews
-- Salon-level and platform-level reports
+- **Multi-Tenant SaaS:** Self-service salon registration (salons start immediately active; Super Admin has view-only oversight). Strict `salon_id` tenant isolation.
+- **Monthly Subscription Billing:** Tiered plans (Basic, Pro, Enterprise) configured by Super Admin; automated 30-day billing cycle and 7-day grace period.
+- **Platform Advertisements:** Super Admin defines banner slots and daily/weekly rates; Salon Admins book targeted promotions.
+- **Master Services Catalog:** Super Admin standardizes service taxonomy (categories, baseline durations); Salons choose active services and set local prices.
+- **Master Inventory Catalog:** Super Admin manages standard brands, SKUs, and authorized suppliers; Salons track shelf stock and raise purchase orders.
+- **Cross-Salon Coins & Referrals:** Referrer gets 10 coins, new customer gets 5 coins upon first paid booking (min. ₹200). 2% back in coins on all paid bookings. 1 coin = ₹1. Coins redeemable at any salon up to 20% of invoice subtotal.
+- **Appointments & POS:** Real-time stylist slot calculation, booking, rescheduling, no-show blocking (after 3 no-shows), and counter payments (Cash, Card, UPI).
+- **Engagement & Real-Time Alerts:** SMS/Email notifications, Socket.IO live booking alerts, and verified appointment reviews.
+
+---
 
 ## 3. Architecture Summary
 
-The system uses **5 consolidated microservices** behind an API gateway, each owning its own database. Services communicate through the API gateway (synchronous) and events (asynchronous). Salon data is separated by a `salon_id` column on every salon-owned table.
+The system is organized into **5 consolidated microservices** behind an **Nginx API Gateway**, with each service owning an independent PostgreSQL database. Services communicate via internal REST APIs (synchronous) and **RabbitMQ** events (asynchronous via Transactional Outbox pattern).
 
-| Service | Responsibility |
-|---|---|
-| `identity-user-service` | Users, roles, permissions, **salons (tenants)**, staff and customer profiles |
-| `salon-operations-service` | Services, appointments, schedules |
-| `billing-promotions-service` | Invoices, payments, offers, coupons, **referrals, coins, commission and settlements** |
-| `inventory-analytics-service` | Products, stock levels, suppliers, purchase orders, then reports and metrics built from events |
-| `engagement-service` | Notifications, templates, reviews, moderation |
+```text
+                 Client Apps (Web / Mobile)
+                             │
+                             ▼
+                 ┌──────────────────────┐
+                 │ API Gateway (Nginx)  │  ◄── Rate Limiting, SSL, X-Request-ID
+                 └──────────┬───────────┘
+       ┌──────────┬─────────┼──────────┬──────────────┐
+       ▼          ▼         ▼          ▼              ▼
+  identity-   salon-     billing-   inventory-    engagement-
+  user        operations promotions analytics     service
+  service     service    service    service
+       │          │         │          │              │
+       ▼          ▼         ▼          ▼              ▼
+    DB (PG)    DB (PG)   DB (PG)    DB (PG)        DB (PG)
 
-Details: [docs/architecture.md](docs/architecture.md)
+         All services publish and consume events through RabbitMQ
+              Redis is used for caching and sessions
+```
+
+| Microservice | Responsibilities | Super Admin Controlled Areas |
+|---|---|---|
+| `identity-user-service` | Users, authentication, customer & staff profiles, salon directory. | **Roles & Permissions (RBAC)**. *Super Admin has view-only access to salons.* |
+| `salon-operations-service` | Stylist schedules, slots, appointments, no-show blocks. | **Master Services Catalog** (categories, standard services, durations). |
+| `billing-promotions-service` | Counter POS invoicing, salon offers/coupons. | **Monthly Subscriptions**, **Advertisements**, and **Coins & Referrals Engine**. |
+| `inventory-analytics-service` | Salon shelf stock, purchase orders, salon & platform reports. | **Master Product Catalog** & **Master Suppliers Catalog**. Platform metrics. |
+| `engagement-service` | Multi-channel notifications (SMS/Email), Socket.IO live alerts, reviews. | Notification templates. |
+
+---
 
 ## 4. Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Language / Runtime | Node.js, TypeScript |
+| Language / Runtime | Node.js (v20+), TypeScript (Strict Mode) |
 | Framework | Express.js |
-| Database | PostgreSQL |
+| Relational Database | PostgreSQL (1 independent DB per microservice) |
 | ORM | Sequelize |
 | Password Hashing | bcrypt |
+| Message Broker | RabbitMQ (with Transactional Outbox pattern) |
+| Cache & Session Store | Redis |
 | Real-time Communication | Socket.IO |
-| Caching / Session Store | Redis |
-| Hosting | DigitalOcean |
-| Message Broker | RabbitMQ |
-| API Gateway / Reverse Proxy | Nginx |
-| Authentication | JWT |
-| Version Control | Git, GitHub |
-| Containerization | Docker, Docker Compose |
-| File Storage | DigitalOcean Spaces (S3-compatible) |
-| Testing | Postman |
+| API Gateway | Nginx |
+| Object Storage | DigitalOcean Spaces (S3-compatible) |
+| Infrastructure | Docker, Docker Compose, DigitalOcean |
 
-## 5. Project Structure
+---
 
-```text
-saloonBackend/
-├── services/
-│   ├── api-gateway/
-│   ├── identity-user-service/
-│   ├── salon-operations-service/
-│   ├── billing-promotions-service/
-│   ├── inventory-analytics-service/
-│   └── engagement-service/
-├── docs/
-│   ├── requirements.md
-│   ├── architecture.md
-│   ├── modules.md
-│   ├── database-design.md
-│   ├── api-documentation.md
-│   ├── business-rules.md
-│   ├── development-plan.md
-│   └── postman/               # Postman collections
-├── scripts/
-│   └── backup/                # Database backup scripts
-├── .github/
-│   └── workflows/             # CI/CD pipelines
-├── docker-compose.yml         # Local development
-├── docker-compose.demo.yml    # Demo environment
-├── docker-compose.prod.yml    # Production
-├── .env.example
-└── README.md
-```
+## 5. Project Documentation
 
-## 6. Getting Started
-
-### Prerequisites
-
-- Node.js 20 or higher
-- npm (installed together with Node.js)
-- Docker and Docker Compose
-- Git
-- Postman (optional, for testing APIs)
-
-### Setup
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/zorrowtechitsolutions/saloonBackend.git
-cd saloonBackend
-
-# 2. Create your environment file
-cp .env.example .env
-
-# 3. Start all services
-docker-compose up --build
-
-# 4. Run database migrations (one per service, in a second terminal)
-for s in identity-user-service salon-operations-service billing-promotions-service \
-         inventory-analytics-service engagement-service; do
-  docker-compose exec "$s" npx sequelize-cli db:migrate
-done
-```
-
-The migration loop assumes the Docker Compose service names match the folder names under `services/`. Adjust them if your compose file uses different names.
-
-### Verify
-
-Open `http://localhost:3000/health`. All services should return `OK`.
-
-## 7. Environment Variables
-
-| Variable | Description |
+| Document | Purpose |
 |---|---|
-| `DB_URL_*` | Database connection string for each service |
-| `JWT_SECRET` | Secret used to sign tokens |
-| `REDIS_URL` | Redis connection string |
-| `MESSAGE_BROKER_URL` | Event broker connection |
-| `SMS_API_KEY` / `EMAIL_API_KEY` | Notification providers |
-| `SPACES_KEY` / `SPACES_SECRET` / `SPACES_BUCKET` / `SPACES_ENDPOINT` | DigitalOcean Spaces file storage |
+| [requirements.md](docs/requirements.md) | Business model, SaaS subscription mechanics, and functional requirements |
+| [business-rules.md](docs/business-rules.md) | In-depth business logic, governance, coin rules, and access constraints |
+| [architecture.md](docs/architecture.md) | Microservice boundaries, multi-tenancy, outbox pattern, and event catalog |
+| [modules.md](docs/modules.md) | Module taxonomy and ownership across microservices |
+| [database-design.md](docs/database-design.md) | Database schemas, table columns, indexes, and relationship constraints |
+| [api-documentation.md](docs/api-documentation.md) | Complete REST API endpoints, access controls, request envelopes, and status codes |
+| [development-plan.md](docs/development-plan.md) | Engineering roadmap, phase breakdown, open decisions, and risk register |
 
-Never commit real secrets. Use `.env.example` for placeholders only.
+---
 
-Coin rewards, commission and similar business values are **not** environment variables. They are stored in the database and changed by a Super Admin through the API.
+## 6. Development Guidelines
 
-## 8. Running Tests
+- **Tenant Isolation:** Every salon-owned record must include `salon_id`. For Admin and Staff users, `req.salonId` is extracted strictly from the verified JWT, never from user input.
+- **Super Admin Boundary:** Super Admin controls **only** Subscriptions, Advertisements, Master Services, Master Inventory, Coins & Referrals, and Roles & Permissions. Super Admin has **view-only** access to salons.
+- **Transactional Outbox:** Never publish RabbitMQ events outside the database transaction. Always write the event to the `outbox` table in the same commit.
+- **Idempotency:** All payment, booking, and coin-redemption endpoints must enforce `Idempotency-Key` headers.
+- **Health Checks:** Every service must provide `/health/live` and `/health/ready` endpoints.
+- **Branches:** `feature/*` → `main` → `demo` → `production`. Direct pushes to `main`, `demo`, or `production` are prohibited.
 
-APIs are tested with Postman. Import the collection from `docs/postman/` and run it against your local environment.
+---
 
-All new APIs must be tested in Postman and pass before merging. Every salon-scoped endpoint must also have a test proving that an Admin or Staff user from salon A cannot read or change salon B's data.
-
-## 9. API Access
-
-- Base URL (local): `http://localhost:3000/api/v1`
-- All requests go through the API gateway.
-- Protected endpoints need the header `Authorization: Bearer <token>`.
-
-Full endpoint list: [docs/api-documentation.md](docs/api-documentation.md)
-
-## 10. Project Documentation
-
-| File | Purpose |
-|---|---|
-| [requirements.md](docs/requirements.md) | Business model, functional and non-functional requirements |
-| [architecture.md](docs/architecture.md) | Backend architecture, multi-salon design, events |
-| [modules.md](docs/modules.md) | Module descriptions |
-| [database-design.md](docs/database-design.md) | Tables and relationships |
-| [api-documentation.md](docs/api-documentation.md) | API endpoints |
-| [business-rules.md](docs/business-rules.md) | Platform, salon, coin and commission rules |
-| [development-plan.md](docs/development-plan.md) | Development phases, tasks and open decisions |
-
-Read these before writing code.
-
-## 11. Development Guidelines
-
-- **Branches:**
-  - `main`: latest tested code, where all work is merged first
-  - `demo`: code from `main` deployed to the demo environment for review
-  - `production`: code from `demo` deployed to the live environment
-  - `feature/<module>-<short-name>`: new features, branched from `main`
-  - `bugfix/<short-name>`: bug fixes, branched from `main`
-
-- **Release flow:** `feature/*` → `main` → `demo` → `production`. Code only moves forward in this order, and never goes to `production` without passing through `demo`.
-- **Commits:** `type(scope): message`, for example `feat(offers): add coupon validation`
-- **Pull requests:** at least one reviewer and passing tests. No direct pushes to `main`, `demo` or `production`.
-- **Boundaries:** a service must not read another service's database. Use APIs or events.
-- **Tenancy:** every salon-owned table has `salon_id`. For Admin and Staff, the salon always comes from the JWT, never from the request body.
-- **Naming:** services in `kebab-case`, tables in `snake_case`, API paths in plural nouns (`/appointments`)
-
-## 12. Team and Contact
+## 7. Team & Contact
 
 | Role | Name | Contact |
 |---|---|---|
@@ -219,4 +132,4 @@ Read these before writing code.
 
 ---
 
-© 2026 zorrowtech. All rights reserved.
+© 2026 Zorrow Tech. All rights reserved.
