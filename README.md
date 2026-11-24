@@ -1,4 +1,4 @@
-# Salon Management System – Backend
+# Zorrow Salon – Backend
 
 > Internal project of **[Company Name]**. Confidential. Do not share outside the organization.
 
