@@ -36,12 +36,12 @@ This repository contains the backend only. It exposes REST APIs through a single
 
 ## 3. Architecture Summary
 
-The system uses **6 consolidated microservices**, each owning its own database. Services communicate through the API gateway (synchronous) and events (asynchronous).
+The system uses **5 consolidated microservices**, each owning its own database. Services communicate through the API gateway (synchronous) and events (asynchronous).
 
 | Service | Responsibility |
 |---|---|
 | `identity-user-service` | Users, roles, permissions, staff and customer profiles |
-| `salon-operations-service` | Branches, services, appointments, schedules |
+| `salon-operations-service` |  services, appointments, schedules |
 | `billing-promotions-service` | Invoices, payments, offers, coupons |
 | `inventory-analytics-service` | Products, stock levels, suppliers, purchase orders then  Reports and metrics built from events |
 | `engagement-service` | Notifications, templates, reviews, moderation |
@@ -54,12 +54,20 @@ Details: [architecture.md](./architecture.md)
 
 | Layer | Technology |
 |---|---|
-| Language / Framework | Node.js  |
+| Language / Runtime | Node.js ,Typescript  |
+| Framework | Express.js |
 | Database |  PostgreSQL  |
-| Messaging |  RabbitMQ  |
-| API Gateway |  Nginx  |
+| ORM |  Sequelize |
+| Password Hashing | bcrypt  |
+| Real-time Communication|  Socket.IO |
+| Caching / Session Store |  Redis |
+| Hosting |  DigitalOcean |
+| Message Broker |  RabbitMQ  |
+| API Gateway/Reverse Proxy |  Nginx  |
 | Authentication | JWT |
+| Version Control | Git, GitHub |
 | Containerization | Docker, Docker Compose |
+| File Storage | DigitalOcean Spaces (S3-compatible) |
 | Testing | postman |
 
 ## 5. Project Structure
